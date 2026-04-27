@@ -2,6 +2,7 @@ from vectordb.db import client
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from langchain_core.documents import Document
+import numpy as np
 
 
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
@@ -40,11 +41,24 @@ def search(query,collectionName):
     results = collection.query(
     query_embeddings=[query_embedding],
     n_results=3,
-    include=[collectionName, "distances"]
+    include=["documents", "distances"]
 )
-    print(results[collectionName][0])
-    return results[collectionName][0]
 
-
-search('''The village of Aster Hollow sat at the edge of a forest so old that no one could agree where it ended.
-Some said the trees reached into neighboring kingdoms.''','documents')
+    filtered_results = [
+        {
+            "document": doc,
+            "similarity_score": 1 - distance
+        }
+        for doc, distance in zip(
+            results["documents"][0],
+            results["distances"][0]
+        )
+        if (1 - distance) > 0.5
+    ]
+    
+    if len(filtered_results) > 0:
+        print({'query':query,'documents':filtered_results})
+        return {'query':query,'documents':filtered_results}
+    else:
+        return {'query':query,'documents':[]}
+        

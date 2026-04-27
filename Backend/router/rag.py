@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter, Request,File,UploadFile
 from service.rag import file_upload
 import io
 import pdfplumber
+from service.rag import search
 
 ragRouter = APIRouter()
 
@@ -14,6 +15,16 @@ async def ingest_file(file: UploadFile = File(...)):
     file_upload(text)
 
 @ragRouter.get('/search')
-def getChunks():
-    return 'hi'
+async def getChunks(request: Request):
+    
+    body = await request.json()
+    
+    print(body)
+    try:
+       response = search(query=body['query'],collectionName=body['collectionName'])
+       return response
+    except:
+        raise BaseException('hi there')
+    
+
 
