@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, Request,HTTPException
 from pydantic import BaseModel,Field
 from db.main import collection_user
-from service.user import createUser
+from service.user import createUser,loginUser
 
 
 
@@ -14,7 +14,8 @@ userRouter = APIRouter()
 async def user_handler(request: Request):
     body = await request.json()
     try:
-        createUser(user=body)
+        response = loginUser(user=body)
+        return response
     except Exception as e:
         raise e
     
@@ -24,12 +25,10 @@ async def user_handler(request: Request):
     body = await request.json()
     
     try:
-        response = collection_user.insert_one({
-            
-            
-        })
-    except:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+       response = createUser(body)
+       return response
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 @userRouter.get("/chat")
 async def user_handler():
